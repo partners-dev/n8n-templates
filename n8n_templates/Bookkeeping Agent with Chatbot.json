@@ -1,0 +1,817 @@
+{
+  "name": "Bookkeeping V2",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        864,
+        64
+      ],
+      "id": "732dc40b-9e3f-4b83-acfe-61ec215e3041",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d4MyABK9v1u9tGip",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"is_transaction\": { \"type\": \"boolean\", \"description\": \"Is this input a valid transaction/purchase?\" },\n    \"item_name\": { \"type\": \"string\", \"description\": \"Name or label of the item or service\" },\n    \"amount\": { \"type\": \"number\", \"description\": \"Numeric amount or price of the transaction\" },\n    \"currency\": { \"type\": \"string\", \"description\": \"Currency code (e.g., PHP, USD, EUR)\" },\n    \"category\": {\n      \"type\": \"string\",\n      \"description\": \"Transaction category\",\n      \"enum\": [\"personal\", \"business\", \"food\", \"transportation\", \"utilities\", \"entertainment\", \"income\", \"investment\", \"education\", \"medical\", \"other\"]\n    },\n    \"subscription\": { \"type\": \"boolean\", \"description\": \"Is this a recurring subscription?\" },\n    \"recurrence_period\": {\n      \"type\": \"string\",\n      \"description\": \"If subscription is true, how often it recurs\",\n      \"enum\": [\"daily\", \"weekly\", \"monthly\", \"yearly\"]\n    },\n    \"transaction_date\": { \"type\": \"string\", \"format\": \"date\", \"description\": \"Date of the transaction\" },\n    \"payment_method\": {\n      \"type\": \"string\",\n      \"enum\": [\"cash\", \"credit_card\", \"debit_card\", \"bank_transfer\", \"ewallet\", \"check\", \"other\"]\n    },\n    \"notes\": { \"type\": \"string\", \"description\": \"Optional remarks or references\" },\n    \"is_business_expense\": { \"type\": \"boolean\", \"description\": \"Whether this is a deductible business expense\" }\n  },\n  \"required\": [\"item_name\", \"amount\", \"currency\", \"category\", \"transaction_date\"],\n  \"additionalProperties\": false\n}\n",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        992,
+        16
+      ],
+      "id": "ab18de4b-8e69-49b5-9025-14a1861a60b0",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Tasks:\n1. Extract the information\n2. Classify the purchase/transaction\n3. Use the email date if there's no specific date time in the email and attachment contents.\n\nIf a transaction cost is 0, then it's not a transaction.\n\nEmail date: {{ $('Merge').item.json.date }}\n\n {{ $json.email_text }}\n\n{{ $json.output }}\n\n{{ $json.data }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a helpful bookkeeper that is amazing at recording transactions."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        -176
+      ],
+      "id": "cdb4ed26-ca1d-4cc7-8c4f-0646827d62ea",
+      "name": "Bookkeeping Agent"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO transactions (\n  item_name, amount, currency, category, transaction_date, payment_method, notes,\n  subscription, recurrence_period, is_business_expense\n)\nVALUES (\n  $1, $2, $3, $4, COALESCE($5::date, CURRENT_DATE),\n  $6, $7, $8, $9, $10\n)\nRETURNING id, created_at;\n",
+        "options": {
+          "queryReplacement": "={{\n[\n  $(\"Bookkeeping Agent\").item.json.output.item_name,                       // $1\n  $(\"Bookkeeping Agent\").item.json.output.amount,                          // $2\n  $(\"Bookkeeping Agent\").item.json.output.currency ?? \"USD\",               // $3\n  $(\"Bookkeeping Agent\").item.json.output.category ?? \"other\",             // $4\n  $(\"Bookkeeping Agent\").item.json.output.transaction_date ?? null,        // $5\n  $(\"Bookkeeping Agent\").item.json.output.payment_method ?? null,          // $6\n  $(\"Bookkeeping Agent\").item.json.output.notes ?? null,                   // $7\n  !!$(\"Bookkeeping Agent\").item.json.output.subscription,                  // $8\n  $(\"Bookkeeping Agent\").item.json.output.recurrence_period ?? null,       // $9\n  !!$(\"Bookkeeping Agent\").item.json.output.is_business_expense,           // $10\n  $json.content ?? null,                                                   // $11 (embed_text)\n  $json.embedding,\n  $json.model ?? null,                                                     // $13\n  $json.embedding_size ?? null                                             // $14\n]\n}}",
+          "treatQueryParametersInSingleQuotesAsText": true
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1488,
+        -176
+      ],
+      "id": "eeb16f56-de83-4518-b930-970dfdf8fe77",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "cxzqYMrl0EYR86Lj",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {
+          "downloadAttachments": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -464,
+        -192
+      ],
+      "id": "39df8090-166b-4846-9f67-e829a4361c0f",
+      "name": "Gmail Trigger - joshanalytics",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mhi7sV4yJ2Ntk0t6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        272,
+        432
+      ],
+      "id": "710c0037-f004-4f8d-84f7-08780fc396cf",
+      "name": "When chat message received",
+      "webhookId": "de1120fa-b2a0-4d6c-88cb-0b10fb81f21b"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        640
+      ],
+      "id": "8db7f584-183b-40c1-9fd8-3437ac829619",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "d4MyABK9v1u9tGip",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Vector store for purchases and transactions",
+        "tableName": "documents",
+        "topK": 10,
+        "options": {
+          "distanceStrategy": "cosine",
+          "columnNames": {
+            "values": {
+              "contentColumnName": "content",
+              "metadataColumnName": "meta"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        656,
+        640
+      ],
+      "id": "ad6122fb-282d-4db7-9ba5-a4191a75126c",
+      "name": "Postgres PGVector Store",
+      "credentials": {
+        "postgres": {
+          "id": "cxzqYMrl0EYR86Lj",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 512
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        656,
+        800
+      ],
+      "id": "45725078-3bc4-4fac-a391-eb00a6279408",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "d4MyABK9v1u9tGip",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": "documents",
+        "options": {
+          "columnNames": {
+            "values": {
+              "contentColumnName": "content",
+              "metadataColumnName": "meta"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        1696,
+        -176
+      ],
+      "id": "5d56d29e-a8a7-4be9-9f10-a4e68754e972",
+      "name": "Postgres PGVector Store1",
+      "credentials": {
+        "postgres": {
+          "id": "cxzqYMrl0EYR86Lj",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 512
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1664,
+        16
+      ],
+      "id": "d96066b0-e258-47b3-a37e-0ddbf4fc4e00",
+      "name": "Embeddings OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "d4MyABK9v1u9tGip",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "=*transaction*: {{ $('Bookkeeping Agent').item.json.output.item_name }}; *value*: {{ $('Bookkeeping Agent').item.json.output.amount }} {{ $('Bookkeeping Agent').item.json.output.currency }}. *Category*: {{ $('Bookkeeping Agent').item.json.output.category }}. *Other notes*: {{ $('Bookkeeping Agent').item.json.output.notes }} ",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "=category",
+                "value": "={{ $('Bookkeeping Agent').item.json.output.category }}"
+              },
+              {
+                "name": "subscription",
+                "value": "={{ $('Bookkeeping Agent').item.json.output.subscription }}"
+              },
+              {
+                "name": "transaction_date",
+                "value": "={{ $('Bookkeeping Agent').item.json.output.transaction_date }}"
+              },
+              {
+                "name": "document_type",
+                "value": "transaction"
+              }
+            ]
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1808,
+        16
+      ],
+      "id": "0599661c-0a21-4dd7-80b8-e51de227709d",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a helpful assistant that has access to transaction records.\nAccess the vector store or the do a SQL query to answer questions.\n\nSet your tone to be exhausted at giving financial advise to a financially-irresponsible person that's spends too much on questionable items.\n\nYour tone should be along the lines of `Why are you making these purchases omg`\n\nTools available:\n- Vector store\n- Postgres DB (`public.transactions`"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        432
+      ],
+      "id": "ad325003-ba47-4e26-8bce-9d75610d24f4",
+      "name": "Bookkeeper"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        496,
+        640
+      ],
+      "id": "aa0f5bf0-a7d4-4327-9c63-17bbc5e90dca",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "content": "# Triggers\n- New emails are checked and categorized \nif they are transactions/purchases/etc.",
+        "height": 400,
+        "width": 672
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        -336
+      ],
+      "id": "4fc55ca2-8981-4744-9d44-f16bd56bb545",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Attachment parsing",
+        "height": 688,
+        "width": 576
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        192,
+        -416
+      ],
+      "id": "b5911875-31e9-4ec3-8dd4-b42bee32b023",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Bookkeeping Agent\nTasks:\n- Classifying transactions\n- Identifying recurring payments\n- Saving into database (Postgres)\n- Generating embeddings and storing into knowledge base",
+        "height": 688,
+        "width": 1200,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        816,
+        -416
+      ],
+      "id": "6ede578a-5818-462f-b455-f3b9ae149405",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Chat Assistant\n- RAG-based system to chat/inquire about purchases",
+        "height": 624,
+        "width": 736,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        192,
+        336
+      ],
+      "id": "762bfac2-c117-4246-a551-8798e5ff027c",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ea02dd2d-062f-4877-b5a9-0e710cd1b61a",
+              "leftValue": "={{ $('Merge').item.binary }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        -192
+      ],
+      "id": "08bf16a1-f010-4b6e-8b87-7995a7427e29",
+      "name": "Attachment Check1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3392f945-7eec-4c31-8707-b26aa53ecc4c",
+              "name": "email_text",
+              "value": "={{ $('Merge').item.json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "c0752cf1-af66-4629-94c4-a91b6a003df1",
+              "name": "attachment_text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        352,
+        64
+      ],
+      "id": "e8af5b65-cde3-47ce-9941-289af99da649",
+      "name": "Edit Fields1",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "description": "Use the tool to think about something. It will not obtain new information or change the database, but just append the thought to the log. Use it when complex reasoning or some cache memory is needed.\n\nThis tool should help you with the following:\n1. Identify if the input is a valid transaction/purchase\n2. Help in extracting the fields required"
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "0f250193-fbc9-40f8-844e-385cbb62817c",
+      "name": "Think"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8baa8ecc-8f15-4b45-978e-1347d0781db6",
+              "leftValue": "={{ $json.output.is_transaction }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1264,
+        -176
+      ],
+      "id": "4ca9dc22-d76b-49be-8a9e-e792ce782dcc",
+      "name": "Is transaction?"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "Please parse the attachment and convert it into a markdown-formatted text.",
+        "options": {
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        -288
+      ],
+      "id": "a229de62-db60-4ea9-92f9-2cfb36ea3a27",
+      "name": "Attachment Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        -128
+      ],
+      "id": "128b3cb7-bed8-4018-b183-c7fd25e82a49",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "d4MyABK9v1u9tGip",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "html": "={{ $('Merge').item.json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        528,
+        64
+      ],
+      "id": "376b8096-3766-4660-bc2e-e08fecc633d1",
+      "name": "HTML to Markdown",
+      "notesInFlow": true
+    }
+  ],
+  "pinData": {
+    "Gmail Trigger - joshanalytics": [
+      {
+        "json": {
+          "id": "199ce10e50ac3f00",
+          "threadId": "199ce10e50ac3f00",
+          "snippet": "Hi Joshua, Leading brands like Swiggy &amp; BookMyShow trust ImageKit (rated #1 in Media Optimization &amp; Management by G2 with a whopping 4.6/5 rating) to achieve faster and streamlined media",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 42677,
+          "historyId": "777063",
+          "internalDate": "1760098836000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "CATEGORY_PROMOTIONS",
+              "name": "CATEGORY_PROMOTIONS"
+            }
+          ],
+          "To": "josh@joshanalytics.com",
+          "Subject": "Level up like Swiggy & BookMyShow: Faster website with streamlined media experiences",
+          "From": "\"Rahul from ImageKit.io\" <rahul@imagekit.io>"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Bookkeeping Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Structured Output Parser1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Bookkeeping Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bookkeeping Agent": {
+      "main": [
+        [
+          {
+            "node": "Is transaction?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Postgres PGVector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger - joshanalytics": {
+      "main": [
+        [
+          {
+            "node": "Attachment Check1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Bookkeeper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Bookkeeper",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "Bookkeeper",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store1": {
+      "main": [
+        []
+      ]
+    },
+    "Embeddings OpenAI1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Postgres PGVector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Bookkeeper",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attachment Check1": {
+      "main": [
+        [
+          {
+            "node": "Attachment Parser",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "HTML to Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Think": {
+      "ai_tool": [
+        [
+          {
+            "node": "Bookkeeping Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is transaction?": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Attachment Parser",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attachment Parser": {
+      "main": [
+        [
+          {
+            "node": "Bookkeeping Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML to Markdown": {
+      "main": [
+        [
+          {
+            "node": "Bookkeeping Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2bd8a03a-6d6b-4f61-970f-3c1a401be463",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "250c0e617092e0cf94c6f1f6066ee26d77abb7a741595f89f9a5c51784aa8c4d"
+  },
+  "id": "8hOHpGTnt4v5ITnc",
+  "tags": []
+}
