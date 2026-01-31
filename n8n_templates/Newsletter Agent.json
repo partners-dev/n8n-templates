@@ -1,0 +1,796 @@
+{
+  "name": "Newsletter Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "endpointUrl": "https://mcp.tavily.com/mcp/?tavilyApiKey=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",
+        "serverTransport": "httpStreamable",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        656,
+        528
+      ],
+      "id": "9e96896c-8f3c-4fbc-8e4c-184f9c899445",
+      "name": "Web Research MCP"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        848,
+        528
+      ],
+      "id": "54ba06b2-b56b-49c6-893a-bdf728100e85",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d4MyABK9v1u9tGip",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Upload your data to test RAG",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Upload your file(s)",
+              "fieldType": "file",
+              "acceptFileTypes": ".pdf, .csv",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -1504,
+        32
+      ],
+      "id": "ffc01284-1580-4169-89c2-e07be7b79618",
+      "name": "Upload your file here",
+      "webhookId": "82848bc4-5ea2-4e5a-8bb6-3c09b94a8c5d"
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        192
+      ],
+      "id": "68d0198c-b3d6-417d-a948-8fbb1f709269",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "content": "### 📚 Load Data Flow",
+        "height": 604,
+        "width": 1532,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1616,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "6ade87e2-af77-4e5e-b73d-063c1396544b",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "value": "vector_store_key",
+          "mode": "list",
+          "cachedResultName": "vector_store_key"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.2,
+      "position": [
+        -512,
+        32
+      ],
+      "id": "a0cbfcfa-310b-4904-8bd0-108493dc953c",
+      "name": "Insert Data to Store"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -352,
+        368
+      ],
+      "id": "18be8383-1b6c-47cd-bf3f-ef3fd4f5d12f",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "d4MyABK9v1u9tGip",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "This tool is a repository of different knowledge bases. Use this to get information on the following sources:\n\n\n1. How to sell\n2. How to write compelling newsletters\n3. Products",
+        "memoryKey": {
+          "__rl": true,
+          "mode": "list",
+          "value": "vector_store_key"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        -272,
+        640
+      ],
+      "id": "9f29a86b-9539-4804-a112-549b9a42ff3a",
+      "name": "Retrieve Information"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate an email for for this input:\n\n{{ $('When chat message received').item.json.chatInput }}\n\nToday's date: {{ $now.format('yyyy-MM-dd') }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an orchestrator and planning agent for an email newsletter agency focused on selling products via email.\n\nYou have access to these tools:\n1. Researcher agent\n2. Writer agent\n3. Email formatting agent\n4. knowledge base (Vector database)"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        0
+      ],
+      "id": "87975fb3-5496-4ccf-a750-31a63edd6380",
+      "name": "Orchestrator Agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This AI agent tool will help you research on the topic at hand.",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "You are a skilled researcher for a newsletter generation. You need to do a comprehensive review (around 5 sources) based on the query provided. \n\nIMPORTANT! Only select credible sources.\nNote: You can check the vector store if there are any relevant information available that will help you in your task.\n\nBe as specific as possible so that it's more relatable for the newsletter reader.\n\nOutput needed:\n- Summary\n- URL of each source\n- Date posted of source\n- Short description of each source"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        608,
+        272
+      ],
+      "id": "84985a9b-b5ae-47aa-9d71-f3adce45d3d2",
+      "name": "Researcher Agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This AI agent tool will help you convert research into email newsletter drafts.",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "You are a world renowned writer that specializes on email marketing.\n\nYour task is to write compelling, story-driven email newsletter from the provided information.\n\nBe as specific as possible so that it's more relatable for the newsletter reader.\n\nIMPORTANT! You have access to guides on how to write effective and amazing newsletters in the vector store."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        272
+      ],
+      "id": "c78caf87-b21b-42c0-8ed8-60fe2d769863",
+      "name": "Writer Agent"
+    },
+    {
+      "parameters": {
+        "toolDescription": "This tool will help you convert text into HTML-formatted email newsletters",
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "You are an expert Newsletter formatting specialist.\n\nYou will be provided with a chunk of text that is to be formatted into an aesthetically pleasing HTML-formatted email newsletter.\n\nYou have access to guides on how to format effective and amazing newsletters in the vector store."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        272
+      ],
+      "id": "5c7626f7-c3c4-45c4-ac84-d4b1a252b372",
+      "name": "Newsletter Agent"
+    },
+    {
+      "parameters": {
+        "formTitle": "Ingest Webpage to be Used as Knowledge Source",
+        "formDescription": "Paste the webpage you want to be used as a source for LLMs to use as a resource.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Webpage Link",
+              "placeholder": "URL",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -1504,
+        208
+      ],
+      "id": "c8668081-584a-4d44-9198-ef692895ec5c",
+      "name": "Use a webpage as source",
+      "webhookId": "fe7bdbd1-a64d-4be1-86df-9dd5419483fe"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json['Webpage Link'] }}",
+        "options": {
+          "browserWSEndpoint": "ws://browserless:3000?token=change-me-long-random"
+        }
+      },
+      "type": "n8n-nodes-puppeteer.puppeteer",
+      "typeVersion": 1,
+      "position": [
+        -1312,
+        208
+      ],
+      "id": "53feb2e6-2c8d-4b23-bdce-79edf523d64c",
+      "name": "Get page contents"
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.body }}",
+        "options": {
+          "bulletMarker": "*"
+        }
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        -1104,
+        208
+      ],
+      "id": "5743d95a-58f7-4919-99ed-cfbcbe674c07",
+      "name": "Convert HTMLto Markdown"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a8b19458-f96c-41dc-b10c-d5affb724f95",
+              "name": "source",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "51768656-0651-457d-8c65-29885be928cd",
+              "name": "content",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -896,
+        208
+      ],
+      "id": "40237fd8-d0b6-40b2-bd29-7960471e7fc4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        0
+      ],
+      "id": "c3e13d74-17f0-46d6-b38a-7f515190cc76",
+      "name": "When chat message received",
+      "webhookId": "12dc9559-9338-4ace-9c79-f887ff80793a"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        816,
+        160
+      ],
+      "id": "f3c3e46c-117b-4972-8737-175407092316",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"email_subject\": \"Subject line for email\",\n\t\"email_content\": \"email content goes here (in html formatting)\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        160
+      ],
+      "id": "6461d7eb-80a8-4bb8-ada1-bca5c2c831a0",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "sendTo": "josh@joshanalytics.com, marjorie@marjoriegarce.com, joshuacruz9420@gmail.com",
+        "subject": "={{ $json.output.email_subject }}",
+        "message": "={{ $json.output.email_content }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Josh at JoshAnalytics"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1232,
+        0
+      ],
+      "id": "9198d462-3df6-4537-8914-1ff039294214",
+      "name": "Send a message",
+      "webhookId": "abaa51ec-cbfb-4c41-b0f0-8907620fb8f1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "mhi7sV4yJ2Ntk0t6",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Ingest Webpage to be Used as Knowledge Source",
+        "formDescription": "Paste the webpage you want to be used as a source for LLMs to use as a resource.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Webpage Link",
+              "placeholder": "URL",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -1504,
+        400
+      ],
+      "id": "019146f9-413d-486d-a0ac-f6b3702152bf",
+      "name": "YouTube Video as source",
+      "webhookId": "a10f2e51-5ac3-4962-a7e3-55e3addda3f0"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "audioUrls": "https://www.youtube.com/watch?v=JfbtySq6_B4",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        400
+      ],
+      "id": "567ff942-6847-4218-b502-63d2ec82bfab",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "O7KmxtrWo8Nz4BjL",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.srv983916.hstgr.cloud/webhook/log_event",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"workflow_id\": \"{{$workflow.id}}\",\n  \"workflow_name\": \"{{$workflow.name}}\",\n  \"execution_id\": \"{{ $execution.id }}\",\n  \"trigger\": \"manual\",\n  \"status\": \"running\",\n  \"seq\": 0,\n  \"event_type\": \"{{ $execution.mode }}\",\n  \"meta\": {\n    \"env\": \"dev\",\n    \"initiator\": \"curl test\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "d0900f7c-d239-4a0e-8609-075da1679c4f",
+      "name": "Log Execution start"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.srv983916.hstgr.cloud/webhook/log_event",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"workflow_id\": \"{{$workflow.id}}\",\n  \"workflow_name\": \"{{$workflow.name}}\",\n  \"execution_id\": \"{{ $execution.id }}\",\n  \"trigger\": \"manual\",\n  \"status\": \"running\",\n  \"seq\": 0,\n  \"event_type\": \"{{ $execution.mode }}\",\n  \"meta\": {\n    \"env\": \"dev\",\n    \"initiator\": \"curl test\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1056,
+        -144
+      ],
+      "id": "1f72b322-9e51-4b8c-b997-9cdce5b57d04",
+      "name": "Log Execution"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.srv983916.hstgr.cloud/webhook/log_event",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"workflow_id\": \"{{$workflow.id}}\",\n  \"workflow_name\": \"{{$workflow.name}}\",\n  \"execution_id\": \"{{ $execution.id }}\",\n  \"trigger\": \"manual\",\n  \"status\": \"running\",\n  \"seq\": 0,\n  \"event_type\": \"{{ $execution.mode }}\",\n  \"meta\": {\n    \"env\": \"dev\",\n    \"initiator\": \"curl test\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        0
+      ],
+      "id": "b5399b48-c7da-4814-81e8-66bc96037f31",
+      "name": "Log Execution1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Send a post request after each execution to track actions in postgres",
+        "method": "POST",
+        "url": "https://n8n.srv983916.hstgr.cloud/webhook/log_event",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('JSON', `Payload required:\n\n{\n  \"workflow_id\": \"{{$workflow.id}}\",\n  \"workflow_name\": \"{{$workflow.name}}\",\n  \"execution_id\": \"{{ $execution.id }}\",\n  \"trigger\": \"manual\",\n  \"status\": \"running\",\n  \"seq\": 0,\n  \"event_type\": \"{{ $execution.mode }}\",\n  \"meta\": {\n    \"env\": \"dev\",\n    \"initiator\": \"curl test\"\n  }\n}`, 'json') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        416,
+        208
+      ],
+      "id": "ed18bf7e-8f70-4583-abc2-a01a21d796af",
+      "name": "Log execution and Events"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Web Research MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Researcher Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Researcher Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Writer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Newsletter Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload your file here": {
+      "main": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Retrieve Information",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieve Information": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Writer Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Newsletter Agent",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Researcher Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Researcher Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Writer Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Newsletter Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use a webpage as source": {
+      "main": [
+        [
+          {
+            "node": "Get page contents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get page contents": {
+      "main": [
+        [
+          {
+            "node": "Convert HTMLto Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert HTMLto Markdown": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Orchestrator Agent": {
+      "main": [
+        [
+          {
+            "node": "Log Execution",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Insert Data to Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Log Execution start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Log Execution1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube Video as source": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Execution start": {
+      "main": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Execution": {
+      "main": [
+        []
+      ]
+    },
+    "Log execution and Events": {
+      "ai_tool": [
+        [
+          {
+            "node": "Orchestrator Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "110cbf9c-ef9d-49e3-ad1e-e75fb275b5cd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "250c0e617092e0cf94c6f1f6066ee26d77abb7a741595f89f9a5c51784aa8c4d"
+  },
+  "id": "2wvMQOycHgRxvJO5",
+  "tags": []
+}
