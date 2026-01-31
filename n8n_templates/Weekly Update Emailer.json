@@ -1,0 +1,653 @@
+{
+  "name": "Weekly Update Emailer",
+  "nodes": [
+    {
+      "parameters": {
+        "sendTo": "=mikyla@joinmoxie.com, practicesuccess@joinmoxie.com, jesse@joinmoxie.com, kamau@joinmoxie.com, kiera@joinmoxie.com, lauren.taibi@joinmoxie.com, ali@joinmoxie.com, miki@joinmoxie.com, leslie@joinmoxie.com, kelsey@joinmoxie.com, sinthuja@joinmoxie.com",
+        "subject": "=PSM Weekly Updates",
+        "message": "={{ $json.output.email_body }}",
+        "options": {
+          "bccList": "joshua.cruz@joinmoxie.com",
+          "senderName": "Moxie Automations",
+          "replyTo": "mikyla@joinmoxie.com"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        112
+      ],
+      "id": "d327cd75-c8be-4543-bc0a-6ce208583d99",
+      "name": "Send a message",
+      "webhookId": "f48868ee-7449-4c77-b609-5ce244ff1383",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "QHckG5ZimaHHYhAG",
+          "name": "Webrover"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "pDsKUxc0JyTDQgtY",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/pDsKUxc0JyTDQgtY",
+          "cachedResultName": "Log Workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $execution.id }}",
+            "workflow_id": "={{ $workflow.id }}",
+            "workflow_name": "={{ $workflow.name }}",
+            "status": "completed",
+            "trigger_type": "=",
+            "started_at": "={{ $now }}",
+            "finished_at": "={{ $now }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "workflow_id",
+              "displayName": "workflow_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "workflow_name",
+              "displayName": "workflow_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "trigger_type",
+              "displayName": "trigger_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "finished_at",
+              "displayName": "finished_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "duration_ms",
+              "displayName": "duration_ms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "payload",
+              "displayName": "payload",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        192,
+        32
+      ],
+      "id": "179c2dfe-6e02-4863-a32c-377da97099ef",
+      "name": "Log execution"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-pro-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        320
+      ],
+      "id": "a9551b2a-aab4-438b-b1ff-67e7c8b66700",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "O7KmxtrWo8Nz4BjL",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"email_subject\": \"Important\",\n  \"email_body\": \"Greetings...\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -592,
+        320
+      ],
+      "id": "c8a99644-bcdf-435d-a827-029c016d11c8",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node (JavaScript)\n// Input: multiple items\n// Output: ONE item with array: { updates: [...] }\n\nconst items = $input.all();\n\nconst updates = items.map(item => {\n  const data = item.json;\n\n  const details = (data.Details ?? \"\").trim();\n\n  // Extract URLs\n  const urls = [...details.matchAll(/https?:\\/\\/\\S+/g)].map(m => m[0]);\n\n  // Normalize timestamp → ISO if possible\n  let isoTimestamp = null;\n  if (data.Timestamp) {\n    const d = new Date(data.Timestamp);\n    isoTimestamp = isNaN(d.getTime()) ? data.Timestamp : d.toISOString();\n  }\n\n  return {\n    row_number: data.row_number,\n    timestamp: isoTimestamp,\n    update_type: (data[\"Update Type\"] ?? \"\").trim(),\n    category: (data[\"Category\"] ?? \"\").trim(),\n    point_of_contact: (data[\"Main Point of Contact \"] ?? \"\").trim(),\n    details_text: details,\n    urls,\n  };\n});\n\n// Return as a **single output item**\nreturn [\n  {\n    json: {\n      updates,\n      count: updates.length\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        112
+      ],
+      "id": "2d31d860-cef1-43f9-816a-e3fb5a823022",
+      "name": "Prepare Updates"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -768,
+        464
+      ],
+      "id": "e924c393-0b34-46a1-a2f3-af5e603ff1c6",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "d4MyABK9v1u9tGip",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "176NZfLiFBNgmMtxnBH8mgcHzcCoYEx5974EhgE88u6A",
+          "mode": "list",
+          "cachedResultName": "Weekly PSM Updates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/176NZfLiFBNgmMtxnBH8mgcHzcCoYEx5974EhgE88u6A/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 847458944,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/176NZfLiFBNgmMtxnBH8mgcHzcCoYEx5974EhgE88u6A/edit#gid=847458944"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.json.row_number }}",
+            "Sent": "TRUE"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Details",
+              "displayName": "Details",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Update Type",
+              "displayName": "Update Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Main Point of Contact ",
+              "displayName": "Main Point of Contact ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sent",
+              "displayName": "Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        352
+      ],
+      "id": "bf557f78-9e04-4921-a96a-239582cca621",
+      "name": "Update row in sheet",
+      "executeOnce": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "haVhHOy2iuV0wc42",
+          "name": "WEBROVER Gsheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e8ebbb2a-ddf3-4348-82c9-f4d62c05e41b",
+              "name": "rows",
+              "value": "={{ $('Get Updates from Sheets').all() }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        352
+      ],
+      "id": "5cd0c481-4286-4751-95e9-c5178a11fdfe",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "rows",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        208,
+        352
+      ],
+      "id": "3c5c7ea1-013d-493e-ab3b-e0ebf1b34987",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#psm-updates",
+          "mode": "name"
+        },
+        "text": "📋 The weekly PSM updates email has been sent out",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        640,
+        352
+      ],
+      "id": "a91974dd-638f-439b-bce3-b9588611e33b",
+      "name": "Send Slack Notification",
+      "webhookId": "9c708828-68e5-4ce0-874f-f84bf5bf4b5e",
+      "executeOnce": true,
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "DOs1lmqo7ecvnVyy",
+          "name": "ROVER slack"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate an email body for these udpates:\n\n<updates>\n{{ JSON.stringify($json.updates) }}\n</updates> ",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=You are an AI system responsible for generating a polished, human-sounding **HTML email body** based on structured input data.\n\n---\n\n### 🎯 Goal\n\nTurn a list of structured updates into a clear, well-organized, natural-sounding **HTML email** that:\n\n* Starts with a warm intro\n* Contains one section per update, each with:\n\n  * A topic heading that begins with an emoji\n  * A short metadata block (Category + Owner/Main Point of Contact)\n  * 1–2 paragraphs that *tell the story* of the update\n  * A **small bullet list** only for the “what you need to know” items (not for everything)\n* Ends with a warm closing paragraph\n\nThe style should feel similar to an internal update like this (for reference only, do not copy verbatim):\n\n> Intro paragraph\n>\n> Topic 1 heading\n> Category + Update type + Owner\n> Context paragraph(s)\n> “What you need to know:” + bullets\n> Closing sentence for that topic\n>\n> Topic 2…\n>\n> Final closing paragraph.\n\n---\n\n### 📥 Input Schema (Fixed)\n\nYou will receive JSON like:\n\n```json\n[\n  {\n    \"updates\": [\n      {\n        \"row_number\": <number>,\n        \"timestamp\": \"<ISO timestamp>\",\n        \"update_type\": \"<string>\",\n        \"category\": \"<string>\",\n        \"point_of_contact\": \"<string>\",\n        \"details_text\": \"<string block>\",\n        \"urls\": [\"<url>\", ...]\n      }\n    ],\n    \"count\": <number>\n  }\n]\n```\n\nEach entry in `updates` is one topic/section in the email.\n\n---\n\n### 📤 Output Requirements (HTML Only)\n\nYour output must be a **single HTML fragment** representing the **email body only**:\n\n* Do **not** include `<html>`, `<head>`, or `<body>`.\n* Do **not** wrap anything in markdown/code fences or JSON.\n* You may optionally wrap everything in a root `<div>` (not required).\n\nThe overall structure must be:\n\n1. Intro paragraph (`<p>`)\n2. Repeated topic sections (one per update)\n3. Closing paragraph (`<p>`)\n\n---\n\n### 1️⃣ Intro Paragraph\n\nProduce **one `<p>`** that:\n\n* Greets the team (e.g., “Hi team,” or “Happy Friday team!!”).\n* Sets context (e.g., “before we close out the week…”, “as we head into the holiday sprint…”).\n* Expresses appreciation (e.g., “thank you for staying focused, thoughtful…”).\n\nExample structure (for style, not to copy verbatim):\n\n```html\n<p>\n  Happy Friday team!!<br><br>\n  Before we close out the week, I want to get a few important updates in your hands so you’re equipped going into the holiday sprint. As always, thank you for staying focused, thoughtful, and ahead of provider needs.\n</p>\n```\n\n---\n\n### 2️⃣ Topic Sections (One per Update)\n\nFor each item in `updates` (in the order given), create a section with this structure:\n\n#### A. Heading with Emoji (`<h2>`)\n\n* Start with **one relevant emoji** that matches the theme:\n\n  * 📣 or 🚀 for launches / announcements\n  * ⚙️ for product / operations\n  * 🧾 or 💸 for payroll / billing / finance\n  * 🛡️ for compliance / risk\n  * 📦 for supplies / logistics\n  * 🎥 for video/loom-heavy updates\n* Follow with a short, clear, human-readable title **inferred from the update** (usually from `details_text` and/or `update_type`).\n\nExample:\n\n```html\n<h2>📣 New Affirm Support Articles</h2>\n```\n\n#### B. Metadata Paragraph (`<p>` with `<strong>` + `<br>`)\n\nCreate a compact metadata block:\n\n* Always include **Category**\n* Use the `point_of_contact` as **Owner** (or “Main Point of Contact” if more natural for the content)\n\nExample:\n\n```html\n<p>\n  <strong>Category:</strong> New Resource / Tool<br>\n  <strong>Update Type:</strong> ...<br>\n  <strong>Owner:</strong> Carlos – Product\n</p>\n```\n\nIf you include `update_type`, you can format like:\n\n```html\n<p>\n  <strong>Category:</strong> Other Operations &amp; Initiatives<br>\n  <strong>Update Type:</strong> New Launch<br>\n  <strong>Owner:</strong> Amira Aldewick\n</p>\n```\n\n#### C. Context Paragraph(s) (`<p>`)\n\nWrite **1–2 paragraphs** that:\n\n* Explain what’s happening in natural language\n\n* Summarize the most important information from `details_text`\n\n* Feel similar in tone and structure to:\n\n  * “We’ve had ongoing gaps with AI correctly answering Affirm-related questions, so two updated articles are now live. Please bookmark and use these when guiding providers:”\n  * “MD Ops sent emails to providers on 11/19 regarding the ownership transition of their PC. Miki recorded a clear, reassuring video…”\n  * “You can now use advanced formatting in your service descriptions…”\n\n* Avoid bullets here: these are **pure paragraphs**.\n\n* Remove emojis from `details_text`.\n\n* If `details_text` includes URLs that are clearly resources (articles, videos), you can either:\n\n  * Introduce them in the paragraph, and/or\n  * Put them in their own small bullet list (see next section).\n\nExamples:\n\n```html\n<p>\n  We’ve had ongoing gaps with AI correctly answering Affirm-related questions, so two updated help center articles are now live. Please bookmark and use these when guiding providers so we can stay consistent and reduce back-and-forth.\n</p>\n```\n\n```html\n<p>\n  MD Ops sent emails to providers regarding the ownership transition of their PC. The message includes a clear, reassuring video explaining why this strengthens Moxie’s legal structure and does not interrupt medspa operations.\n</p>\n```\n\n#### D. “What you need to know” Bullets (`<p>` + `<ul>`)\n\nUse bullets **only** for the key actionable or checklist-style details.\n\nPattern:\n\n```html\n<p>\n  <strong>What you need to know:</strong>\n</p>\n<ul>\n  <li>...</li>\n  <li>...</li>\n  <li>...</li>\n</ul>\n```\n\nGuidelines:\n\n* 2–6 bullets per update is ideal.\n\n* Use bullets for:\n\n  * Specific counts, requirements, or conditions (e.g., “131 spas will need to sign…”).\n  * Step-by-step or scenario-based guidance.\n  * Links to resources (articles, looms, forms).\n\n* Convert URLs into descriptive links:\n\n  ```html\n  <li>Use the updated article on how to verify if Affirm is active: <a href=\"https://support.joinmoxie.com/...\">How to know if Affirm is active in your account</a>.</li>\n  <li>For checkout flows, reference: <a href=\"https://support.joinmoxie.com/...\">How to check out a client using Affirm</a>.</li>\n  ```\n\n* Do **not** put every sentence as a bullet. The **story and rationale go in paragraphs**; bullets are for concise, “need-to-remember” items.\n\n#### E. Optional Closing Sentence Paragraph (`<p>`)\n\nYou may end each section with a short paragraph reinforcing impact, tone, or expectations.\n\nExamples:\n\n```html\n<p>\n  These should meaningfully reduce back-and-forth and keep us consistent across the team.\n</p>\n```\n\n```html\n<p>\n  Your awareness here helps us stay calm, consistent, and credible with providers.\n</p>\n```\n\n```html\n<p>\n  It’s a small formatting upgrade, but it goes a long way in making our consumer-facing experience feel polished and clear.\n</p>\n```\n\nUse this when it feels natural; skip it if there’s nothing meaningful to add.\n\n---\n\n### 3️⃣ Closing Paragraph\n\nEnd with a **warm closing `<p>`**.\n\n* Acknowledge questions (e.g., “If anything here raises questions, drop them in Slack…”).\n* Express appreciation and energy for the next period.\n\nExamples:\n\n```html\n<p>\n  If anything here raises questions, drop them in Slack and we’ll help clarify. Appreciate each of you for the way you show up — especially in a month where precision, alignment, and partnership matter most!\n</p>\n```\n\n```html\n<p>\n  Thanks again for everything you do — let’s finish the week strong!\n</p>\n```\n\n---\n\n### 🧠 Style & Data Handling Rules\n\n* **Emoji:** Exactly one emoji at the start of each `<h2>` topic title.\n* **Tone:** Friendly, calm, confident, internal-team voice.\n* **HTML:**\n\n  * Use `<p>`, `<h2>`, `<ul>`, `<li>`, `<strong>`, `<br>`, `<a>`.\n  * Don’t use complex layout (tables, div grids, etc.).\n  * Add dividers to separate each topic from the next.\n* **URLs:** Convert to `<a>` tags with short, descriptive anchor text whenever possible.\n* **No extras:**\n\n  * Do **not** show `row_number` or `timestamp`.\n  * Do **not** hallucinate facts not present in the input.\n  * Do **not** include markdown fences, JSON, or external commentary.\n\n---\n\n### ✅ Final Output Contract\n\nWhen you respond, output **only** the HTML email body:\n\n1. One intro `<p>`\n2. For each update:\n\n   * `<h2>` with an emoji + title\n   * Metadata `<p>` (Category + Update type + Owner)\n   * 1–2 context `<p>` paragraphs\n   * Optional `<p><strong>What you need to know:</strong></p>` + `<ul>` bullets\n   * Optional closing `<p>` for the topic\n   * Divider line if there are more topics after the item.\n3. One final closing `<p>`\n\nNothing else.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -768,
+        112
+      ],
+      "id": "5a04b571-2740-4600-bbed-c4083bf6be7e",
+      "name": "Emailer Composer Agent"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "176NZfLiFBNgmMtxnBH8mgcHzcCoYEx5974EhgE88u6A",
+          "mode": "list",
+          "cachedResultName": "Weekly PSM Updates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/176NZfLiFBNgmMtxnBH8mgcHzcCoYEx5974EhgE88u6A/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 847458944,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/176NZfLiFBNgmMtxnBH8mgcHzcCoYEx5974EhgE88u6A/edit#gid=847458944"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Sent"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1248,
+        112
+      ],
+      "id": "7673ea2b-fc4a-411d-9a78-0085507305e8",
+      "name": "Get Updates from Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "haVhHOy2iuV0wc42",
+          "name": "WEBROVER Gsheets"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                5
+              ],
+              "triggerAtHour": 12
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1456,
+        112
+      ],
+      "id": "f93a53a6-3c9a-4b0b-8352-c152a49bc0cb",
+      "name": "Run Once A Week"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Log execution",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Emailer Composer Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Emailer Composer Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Updates": {
+      "main": [
+        [
+          {
+            "node": "Emailer Composer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Emailer Composer Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send Slack Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emailer Composer Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Updates from Sheets": {
+      "main": [
+        [
+          {
+            "node": "Prepare Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Once A Week": {
+      "main": [
+        [
+          {
+            "node": "Get Updates from Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "bc35f334-3c49-4b14-bb89-0744b217ad63",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "250c0e617092e0cf94c6f1f6066ee26d77abb7a741595f89f9a5c51784aa8c4d"
+  },
+  "id": "jtjdudepwU0ziSjPK_ZMc",
+  "tags": []
+}
